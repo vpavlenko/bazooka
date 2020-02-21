@@ -18,7 +18,7 @@ function App() {
         <Button
           shape="circle"
           icon="right"
-          onClick={() => setLevel(level + 1)}
+          onClick={() => (level + 1 < LEVELS.length) && setLevel(level + 1)}
         />
       </div>
       <div
@@ -27,11 +27,15 @@ function App() {
           marginLeft: "100px",
           fontFamily: "PT serif",
           color: "#000",
-          fontSize: '16px',
-          marginTop: '3em',
+          fontSize: "16px",
+          marginTop: "3em"
         }}
       >
-        <div dangerouslySetInnerHTML={{ __html: LEVELS[level] }} />
+        <div
+          dangerouslySetInnerHTML={{
+            __html: LEVELS[level].replace(/\n\n/g, "<br><br>")
+          }}
+        />
       </div>
     </div>
   );
