@@ -3,9 +3,12 @@ from collections import Counter
 import json
 
 from parse_dictionary import get_translation
+from align_paragraphs import english_paragraphs
+
 
 CHAPTERS_TO_PROCESS = 1
 NEWCHAPTER = 'NEWCHAPTER\n'
+ENGLISH_PARAGRAPHS_OFFSET = 11
 
 segmented_lines = open('segmented_book.txt').readlines()
 PUNCTUATION = "！？｡。＂＃＄％＆＇（）＊-＋，－／：；＜＝＞＠［＼］＾＿｀｛｜｝～｟｠｢｣､、〃》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏."
@@ -25,11 +28,9 @@ while current_chapter <= CHAPTERS_TO_PROCESS:
         words = re.sub(rf'[{PUNCTUATION}]+', ' ', line).split()
         c.update(words)
 
-    print(c)
+    lines_translated = []
 
-
-
-    for line in chapter_lines:
+    for line_number, line in enumerate(chapter_lines):
         tokens = []
         line = line[:-1] + ' '
         word = ''
@@ -40,6 +41,8 @@ while current_chapter <= CHAPTERS_TO_PROCESS:
             elif character == ' ':
                 if word:
                     translation = get_translation(word)
+                    if not translation:
+                        print(f'ZERO-LENGTH TRANSLATION: {word=}')
                     if translation[0] == '*':
                         translation = ' '.join([get_translation(c) for c in word])
                         tokens.append(('translation_characters', translation))
@@ -48,7 +51,18 @@ while current_chapter <= CHAPTERS_TO_PROCESS:
                     word = ''
             else:
                 word += character
-        print(line)
-        print(tokens)
+
+        lines_translated.append({
+            'chinese_source': line,
+            'translation': tokens,
+            'english_source': english_paragraphs[ENGLISH_PARAGRAPHS_OFFSET + line_number].prettify()
+        })
 
     current_chapter += 1
+
+    chapter_json = {
+        'lines': lines_translated,
+        'frequencies': c.most_common(),
+    }
+
+    print(json.dumps(chapter_json, indent=2, sort_keys=True, ensure_ascii=False))
